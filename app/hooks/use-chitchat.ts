@@ -39,7 +39,18 @@ export function useChitchat() {
      if(!media.current){send("stop");return;}
      clearPeer();room.current=m.room;setPeer(m.peer);setStatus("connecting");setNotice("");setFriendState(m.friends?"added":"none");
      const connection=new RTCPeerConnection({iceServers:ice.current,iceTransportPolicy:icePolicy.current});pc.current=connection;
-     media.current.getTracks().forEach(t=>connection.addTrack(t,media.current!));
+     for(const track of media.current.getTracks()){
+       const sender=connection.addTrack(track,media.current!);
+       if(track.kind==="video"){
+         // Keep faces sharp; WebRTC can reduce frame rate on slower connections.
+         const parameters=sender.getParameters();
+         if(!parameters.encodings?.length)parameters.encodings=[{}];
+         parameters.encodings[0].maxBitrate=3_000_000;
+         parameters.encodings[0].maxFramerate=30;
+         parameters.degradationPreference="maintain-resolution";
+         try{await sender.setParameters(parameters);}catch{/* Browser defaults when unsupported. */}
+       }
+     }
      connection.onicecandidate=e=>{if(e.candidate&&room.current===m.room)send("signal",{signal:{kind:"candidate",candidate:e.candidate.toJSON()}});};
      connection.ontrack=e=>{if(pc.current===connection)setRemoteStream(e.streams[0]||new MediaStream([e.track]));};
      connection.onconnectionstatechange=()=>{
@@ -110,7 +121,8 @@ export function useChitchat() {
      if(ticket!==epoch.current)return;
      setIdentity(data.id);ice.current=data.iceServers;icePolicy.current=data.iceTransportPolicy==="relay"?"relay":"all";setRelayConfigured(data.relayConfigured);
      if(!navigator.mediaDevices?.getUserMedia)throw new Error("Camera access needs HTTPS or localhost and a supported browser.");
-     const captured=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24,max:30}},audio:{echoCancellation:true,noiseSuppression:true}});
+     const captured=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30},facingMode:{ideal:"user"}},audio:{echoCancellation:true,noiseSuppression:true}});
+     captured.getVideoTracks().forEach(track=>{track.contentHint="detail";});
      if(ticket!==epoch.current){captured.getTracks().forEach(t=>t.stop());return;}
      media.current=captured;setStream(captured);setMuted(false);setCameraOff(false);
      await connect();if(ticket!==epoch.current)return;
