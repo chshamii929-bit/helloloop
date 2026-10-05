@@ -118,3 +118,6 @@ Metered ki current pricing page par 500 MB monthly TURN trial, $0/month aur no c
 
 Dashboard reference: https://www.metered.ca/docs/dashboard/new-dashboard/
 
+
+## Repository Blueprint deployment
+The root render.yaml targets chshamii929-bit/helloloop, main branch, rootDir app and a Free Node Web Service. Render generates SESSION_SECRET and STAGING_ACCESS_CODE and supplies PUBLIC_ORIGIN from this service's RENDER_EXTERNAL_URL. Use the generated access code from the Render dashboard for invited testers. With this Blueprint, entering the origin manually is unnecessary. Manual Web Service setup instructions above still apply when not using the Blueprint.

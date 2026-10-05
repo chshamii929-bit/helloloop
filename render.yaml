@@ -2,6 +2,9 @@
   - type: web
     name: helloloop-staging
     runtime: node
+    rootDir: app
+    repo: https://github.com/chshamii929-bit/helloloop
+    branch: main
     plan: free
     buildCommand: npm ci --no-audit --no-fund && npm run build
     startCommand: npm start
