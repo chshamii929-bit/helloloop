@@ -1,0 +1,14 @@
+﻿# Local credentials and generated files
+.env
+.env.*
+!.env.example
+**/node_modules/
+**/.data/
+**/.next/
+**/out/
+**/artifacts/
+**/.sites-runtime/
+.agents/
+.codex/
+.aws/
+*.tsbuildinfo
