@@ -141,3 +141,16 @@ test('relay-only configuration requires TURN and is supplied to tester sessions'
  assert.equal(result.data.iceServers[1].urls[0],'turn:relay.invalid:3478');
 });
 
+
+ test('country comes from trusted network headers, not submitted profile',async t=>{
+ const previous=process.env.TRUST_CLOUDFLARE_PROXY;
+ process.env.TRUST_CLOUDFLARE_PROXY='true';
+ t.after(()=>{if(previous===undefined)delete process.env.TRUST_CLOUDFLARE_PROXY;else process.env.TRUST_CLOUDFLARE_PROXY=previous;});
+ const a=await setup(t);
+ const headers={Origin:a.origin,'Content-Type':'application/json','cf-ipcountry':'PK'};
+ const location=await fetch(a.origin+'/api/country',{headers});assert.equal((await location.json()).country,'PK');
+ const response=await fetch(a.origin+'/api/session',{method:'POST',headers,body:JSON.stringify({name:'Ali',adult:true,country:'US'})});
+ const user=await response.json();assert.equal(a.store.user(user.id).country,'PK');
+ delete process.env.TRUST_CLOUDFLARE_PROXY;
+ const spoof=await fetch(a.origin+'/api/country',{headers});assert.equal((await spoof.json()).country,null);
+ });

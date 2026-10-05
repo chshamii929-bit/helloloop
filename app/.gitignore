@@ -49,3 +49,5 @@ next-env.d.ts
 /artifacts/
 *.tsbuildinfo
 !.env.example
+
+/public/flags/

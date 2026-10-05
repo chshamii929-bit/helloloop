@@ -17,7 +17,8 @@
     "reports": "node --env-file-if-exists=.env scripts/reports.mjs",
     "test:browser": "node scripts/browser-check.mjs",
     "staging:check": "node --env-file-if-exists=.env scripts/staging-check.mjs",
-    "test:remote": "node --env-file-if-exists=.env scripts/remote-test.mjs"
+    "test:remote": "node --env-file-if-exists=.env scripts/remote-test.mjs",
+    "prebuild": "node scripts/prepare-flags.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -29,6 +30,8 @@
     "date-fns": "^4.4.0",
     "drizzle-orm": "0.45.2",
     "embla-carousel-react": "^8.6.0",
+    "flag-icons": "^7.5.0",
+    "geoip-lite": "^2.0.3",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.31.0",
     "next": "16.3.4",

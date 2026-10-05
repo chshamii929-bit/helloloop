@@ -6,6 +6,7 @@ import { randomBytes, randomUUID, createHmac, timingSafeEqual } from 'node:crypt
 import { WebSocketServer } from 'ws';
 import { createStore } from './store.mjs';
 import { Matchmaker } from './matching.mjs';
+import { detectCountry } from './country.mjs';
 
 export function createApp(options={}) {
   if(process.env.NODE_ENV==='production'&&(!process.env.SESSION_SECRET||!process.env.STAGING_ACCESS_CODE||!process.env.PUBLIC_ORIGIN))throw new Error('Staging requires SESSION_SECRET, STAGING_ACCESS_CODE and PUBLIC_ORIGIN.');
@@ -47,6 +48,7 @@ export function createApp(options={}) {
     res.setHeader('Permissions-Policy','camera=(self), microphone=(self), geolocation=()');
     res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
     const url=new URL(req.url,'http://localhost');
+    if(url.pathname==='/api/country'&&req.method==='GET'){json(res,200,{country:detectCountry(req)});return;}
     if(url.pathname==='/health'){json(res,200,{ok:true});return;}
     if(url.pathname==='/api/session'&&req.method==='POST'){
       if(!allowed(req)){json(res,403,{error:'Origin not allowed'});return;}
@@ -61,7 +63,7 @@ export function createApp(options={}) {
         if(input.adult!==true){json(res,400,{error:'You must confirm you are 18 or older.'});return;}
         const name=typeof input.name==='string'?input.name.trim().slice(0,24):'';
         if(!name){json(res,400,{error:'Choose a display name.'});return;}
-        const id=identity(req)||randomUUID();store.saveUser(id,name);
+        const id=identity(req)||randomUUID();store.saveUser(id,name,detectCountry(req));
         const signature=createHmac('sha256',secret).update(id).digest('hex');
         const iceServers=[{urls:'stun:stun.l.google.com:19302'}];
         if(process.env.TURN_URLS&&process.env.TURN_USERNAME&&process.env.TURN_CREDENTIAL)

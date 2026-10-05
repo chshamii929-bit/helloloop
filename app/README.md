@@ -65,3 +65,6 @@ Add authenticated accounts and account recovery, an enforceable age/access polic
 No production deployment has been performed. Sites was evaluated during setup; a single Node host is used because this app needs a persistent WebSocket signalling process. The generated Sites build helpers are retained but are not the app's deploy path.
 
 
+
+### Automatic country flags
+Country is estimated from the network IP using the local geoip-lite database; no location API, GPS permission or subscription is used. VPNs may show the VPN country, and unavailable countries stay unknown. Country codes are stored with profiles and shown with matched users. Cloudflare tunnel testing trusts visitor headers only on loopback with TRUST_CLOUDFLARE_PROXY=true (set by test:remote). Never enable this on an origin exposed directly to the internet. Other hosting proxies need a separately configured trusted proxy before accurate country detection. Flag SVGs are bundled locally from flag-icons (MIT); IP database attribution: geoip-lite / MaxMind GeoLite.

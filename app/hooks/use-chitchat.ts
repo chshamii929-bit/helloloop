@@ -1,7 +1,7 @@
 ﻿"use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 export type Status="idle"|"preparing"|"waiting"|"connecting"|"connected"|"error";
-export type Person={id:string;name:string;interests?:string[];online?:boolean};
+export type Person={id:string;name:string;country?:string|null;interests?:string[];online?:boolean};
 export type ChatMessage={id:string;from:string;text:string;time:number};
 type Signal={kind:"offer"|"answer"|"candidate";description?:RTCSessionDescriptionInit;candidate?:RTCIceCandidateInit};
 export function useChitchat() {

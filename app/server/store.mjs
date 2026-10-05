@@ -10,9 +10,10 @@ export function createStore(path) {
     CREATE TABLE IF NOT EXISTS blocks (owner TEXT NOT NULL, target TEXT NOT NULL, PRIMARY KEY(owner,target));
     CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, PRIMARY KEY(a,b));
     CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, reporter TEXT NOT NULL, target TEXT NOT NULL, reason TEXT NOT NULL, created INTEGER NOT NULL);`);
+  if(!db.prepare('PRAGMA table_info(users)').all().some(column=>column.name==='country'))db.exec('ALTER TABLE users ADD COLUMN country TEXT');
   return {
-    user: id => db.prepare('SELECT id,name FROM users WHERE id=?').get(id),
-    saveUser: (id,name) => db.prepare('INSERT INTO users VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name').run(id,name,Date.now()),
+    user: id => db.prepare('SELECT id,name,country FROM users WHERE id=?').get(id),
+    saveUser: (id,name,country=null) => db.prepare('INSERT INTO users (id,name,created,country) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,country=excluded.country').run(id,name,Date.now(),country),
     blocked: (a,b) => !!db.prepare('SELECT 1 FROM blocks WHERE (owner=? AND target=?) OR (owner=? AND target=?)').get(a,b,b,a),
     block(a,b) {
       db.prepare('INSERT OR IGNORE INTO blocks VALUES (?,?)').run(a,b);
@@ -20,7 +21,7 @@ export function createStore(path) {
     },
     friend: (a,b) => !!db.prepare('SELECT 1 FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)').get(a,b,b,a),
     addFriend(a,b) { const pair=[a,b].sort(); db.prepare('INSERT OR IGNORE INTO friends VALUES (?,?)').run(...pair); },
-    friends: id => db.prepare('SELECT u.id,u.name FROM friends f JOIN users u ON u.id=CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?').all(id,id,id),
+    friends: id => db.prepare('SELECT u.id,u.name,u.country FROM friends f JOIN users u ON u.id=CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?').all(id,id,id),
     report: (id,a,b,reason) => db.prepare('INSERT INTO reports VALUES (?,?,?,?,?)').run(id,a,b,reason,Date.now()),
     reports: () => db.prepare('SELECT * FROM reports ORDER BY created DESC LIMIT 100').all(),
     close: () => db.close(),

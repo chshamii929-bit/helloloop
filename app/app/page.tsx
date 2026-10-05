@@ -6,6 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useChitchat } from "@/hooks/use-chitchat";
 const reasons=["Inappropriate content","Harassment","Spam or scam","Underage user","Other"];
+function CountryFlag({country}:{country?:string|null}){
+ if(!country||!/^[A-Z]{2}$/.test(country))return null;
+ const label=new Intl.DisplayNames(["en"],{type:"region"}).of(country)||country;
+ return <span className="country-flag" style={{backgroundImage:"url(/flags/"+country.toLowerCase()+".svg)"}} role="img" aria-label={label} title={label}/>;
+}
 function Feed({stream,muted=false,className=""}:{stream:MediaStream|null;muted?:boolean;className?:string}){
  const ref=useRef<HTMLVideoElement>(null);const [needsPlay,setNeedsPlay]=useState(false);
  useEffect(()=>{
@@ -18,6 +23,8 @@ function Feed({stream,muted=false,className=""}:{stream:MediaStream|null;muted?:
 export default function Home(){
  const chat=useChitchat();const [name,setName]=useState("");const [code,setCode]=useState("");const [adult,setAdult]=useState(false);
  const [draft,setDraft]=useState("");
+ const [country,setCountry]=useState<string|null>(null);const [countryReady,setCountryReady]=useState(false);
+ useEffect(()=>{const control=new AbortController();fetch("/api/country",{signal:control.signal}).then(r=>r.ok?r.json() as Promise<{country?:string|null}>:null).then((data:{country?:string|null}|null)=>{setCountry(data?.country||null);setCountryReady(true);}).catch(()=>{if(!control.signal.aborted)setCountryReady(true);});return()=>control.abort();},[]);
  const [chatOpen,setChatOpen]=useState(false);const [readCount,setReadCount]=useState(0);const messageInput=useRef<HTMLInputElement>(null);
  const incomingCount=chat.messages.filter(m=>m.from!==chat.identity).length;const unread=Math.max(0,incomingCount-readCount);
  const [dialog,setDialog]=useState<"friends"|"safety"|"report"|"block"|null>(null);
@@ -60,7 +67,7 @@ export default function Home(){
        {(active||busy)&&<LoaderCircle className="spin" size={22}/>}
       </div>}
       <div className="self-view"><Feed stream={chat.stream} muted className={chat.cameraOff?"camera-hidden":""}/>{(!chat.stream||chat.cameraOff)&&<div className="self-empty">{chat.cameraOff?<VideoOff size={23}/>:<Camera size={25}/>}<span>{chat.cameraOff?"Camera off":"Your camera"}</span></div>}{chat.stream&&<span className="self-label">You {chat.muted&&<MicOff size={12}/>}</span>}</div>
-      {chat.peer&&<div className="peer-tag"><span className="avatar">{chat.peer.name.slice(0,1).toUpperCase()}</span><div><strong>{chat.peer.name}</strong><span>{chat.status==="connected"?"Connected":"Connecting…"}</span></div></div>}
+      {chat.peer&&<div className="peer-tag"><span className="avatar">{chat.peer.name.slice(0,1).toUpperCase()}</span><div><strong><CountryFlag country={chat.peer.country}/> {chat.peer.name}</strong><span>{chat.status==="connected"?"Connected":"Connecting…"}</span></div></div>}
      </div>
      <div className="call-toolbar">
       <div className="call-status" role="status"><span className={"status-dot "+(chat.status==="connected"?"connected":"")}/>{statusText}</div>
@@ -71,9 +78,10 @@ export default function Home(){
      {chat.notice&&<div className="feedback" role="status">{chat.notice}</div>}
     </section>
     <aside className="chat-panel" id="call-chat" aria-label="Conversation messages" onKeyDown={e=>{if(e.key==="Escape"){setChatOpen(false);document.querySelector<HTMLButtonElement>(".call-message-button")?.focus();}}}>
-     <div className="chat-header"><div><MessageCircle size={18}/><h2>Chat</h2></div><span>{chat.peer?chat.peer.name:""}</span>{chat.peer&&<button className="chat-close icon-button" aria-label="Close messages" onClick={()=>{setChatOpen(false);document.querySelector<HTMLButtonElement>(".call-message-button")?.focus();}}><X size={17}/></button>}</div>
+     <div className="chat-header"><div><MessageCircle size={18}/><h2>Chat</h2></div><span>{chat.peer&&<><CountryFlag country={chat.peer.country}/> {chat.peer.name}</>}</span>{chat.peer&&<button className="chat-close icon-button" aria-label="Close messages" onClick={()=>{setChatOpen(false);document.querySelector<HTMLButtonElement>(".call-message-button")?.focus();}}><X size={17}/></button>}</div>
      {!active&&!busy&&!chat.peer?<div className="onboarding">
       <label htmlFor="display-name">What should we call you?</label><input id="display-name" placeholder="Your first name or nickname" autoComplete="nickname" maxLength={24} value={name} onChange={e=>setName(e.target.value)}/>
+      <div className="country-preview" aria-live="polite"><CountryFlag country={country}/><span>{country?new Intl.DisplayNames(["en"],{type:"region"}).of(country):countryReady?"Country unavailable":"Detecting your country?"}</span></div>
       <label htmlFor="access-code">Tester access code <span>if provided</span></label><input id="access-code" placeholder="Enter your invite code" type="password" autoComplete="off" value={code} onChange={e=>setCode(e.target.value)}/>
       <label className="age-check" htmlFor="adult"><Checkbox id="adult" checked={adult} onCheckedChange={v=>setAdult(v===true)}/><span>I am 18 or older and agree to the <button onClick={e=>{e.preventDefault();setDialog("safety");}}>community guidelines</button>.</span></label>
      </div>:<>
