@@ -121,3 +121,8 @@ Dashboard reference: https://www.metered.ca/docs/dashboard/new-dashboard/
 
 ## Repository Blueprint deployment
 The root render.yaml targets chshamii929-bit/helloloop, main branch, rootDir app and a Free Node Web Service. Render generates SESSION_SECRET and STAGING_ACCESS_CODE and supplies PUBLIC_ORIGIN from this service's RENDER_EXTERNAL_URL. Use the generated access code from the Render dashboard for invited testers. With this Blueprint, entering the origin manually is unnecessary. Manual Web Service setup instructions above still apply when not using the Blueprint.
+
+## Remote testing without a hosting card
+From app run npm run test:remote. The official cloudflared executable is stored locally in ignored .sites-runtime/tools/cloudflared.exe (Windows amd64). Download it from https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe on a fresh checkout.
+The command starts a separate local server on port 3001 and prints a temporary HTTPS URL plus a private tester code. Share both with invited adult testers. Keep the PC awake and process running; Ctrl+C closes testing. The code persists in ignored .data/remote-test-code. The URL changes on tunnel restart. Never commit these files.
+After frontend changes run npm run build, then refresh. After backend changes restart the remote test command and share the new URL. Quick Tunnels have no uptime guarantee. TURN is still needed where direct cross-network media cannot connect. This tunnel carries app/signalling traffic and is not a TURN media relay.

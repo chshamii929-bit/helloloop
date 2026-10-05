@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "reports": "node --env-file-if-exists=.env scripts/reports.mjs",
     "test:browser": "node scripts/browser-check.mjs",
-    "staging:check": "node --env-file-if-exists=.env scripts/staging-check.mjs"
+    "staging:check": "node --env-file-if-exists=.env scripts/staging-check.mjs",
+    "test:remote": "node --env-file-if-exists=.env scripts/remote-test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
